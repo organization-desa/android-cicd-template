@@ -64,7 +64,7 @@ jobs:
   publish-debug:
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: inputs.publish_debug == true
+    if: github.ref == 'refs/heads/main'  # push a main
 
     steps:
       - name: Checkout code
