@@ -69,21 +69,9 @@ jobs:
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           BUILD_NUMBER="${{ github.run_number }}"        
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
-            VERSION="${{ github.ref_name }}"
-      
-          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
-            # Caso 2: Rama release/1.0.0 → 1.0.0
-            VERSION="${{ github.ref_name }}"
-            VERSION="${VERSION#release/}"      
-          else
-            # Caso 3: Cualquier otra rama
-            VERSION="no-tag"
-          fi
 
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}-${TAG_NAME}.apk"
+          NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}.apk"
       
           mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
           echo "NEW_NAME=$NEW_NAME" >> $GITHUB_ENV
