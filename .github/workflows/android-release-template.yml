@@ -67,6 +67,8 @@ jobs:
 
       - name: Resolve version name
         run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          BUILD_NUMBER="${{ github.run_number }}"        
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
             VERSION="${{ github.ref_name }}"
@@ -84,6 +86,7 @@ jobs:
           NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}-${TAG_NAME}.apk"
       
           mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
+          echo "NEW_NAME=$NEW_NAME" >> $GITHUB_ENV
           echo "APK renamed to $NEW_NAME"
     
       - name: Upload APK
@@ -94,7 +97,7 @@ jobs:
           
       - name: Check build output
         run: |
-          if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+          if [ -f "app/build/outputs/apk/release/$NEW_NAME" ]; then
             echo "✅ Release APK generated successfully"
           else
             echo "❌ Release APK not found"
