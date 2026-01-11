@@ -109,6 +109,27 @@ jobs:
           KEY_ALIAS_DEBUG: ${{ secrets.KEY_ALIAS_DEBUG }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Resolve version name
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
+            VERSION="${{ github.ref_name }}"
+      
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            # Caso 2: Rama release/1.0.0 → 1.0.0
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#release/}"      
+          else
+            # Caso 3: Cualquier otra rama
+            VERSION="no-tag"
+          fi
+
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          NEW_NAME="${REPO_NAME}-debug-${BUILD_NUMBER}-${TAG_NAME}.apk"
+      
+          mv "$APK_PATH" "app/build/outputs/apk/debug/$NEW_NAME"
+          echo "APK renamed to $NEW_NAME"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
