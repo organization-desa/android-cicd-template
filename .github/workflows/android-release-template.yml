@@ -22,7 +22,7 @@ on:
         required: true
 
 jobs:
-  publish-debug:
+  publish-release:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -68,7 +68,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: release-apk
           path: app/build/outputs/apk/release/*.apk
           
       - name: Check build output
