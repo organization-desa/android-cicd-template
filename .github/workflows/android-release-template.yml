@@ -1,0 +1,72 @@
+name: Android Release Template
+
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        type: string
+        required: false
+        default: "17"
+      java_distribution:
+        type: string
+        required: false
+        default: "temurin"
+    secrets:
+      RELEASE_KEYSTORE_BASE64:
+        required: true
+      KEYSTORE_PASSWORD:
+        required: true
+      KEY_ALIAS_RELEASE:
+        required: true
+      KEY_PASSWORD:
+        required: true
+
+jobs:
+  publish-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java_version }}
+          distribution: ${{ inputs.java_distribution }}
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          packages: >
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+            ndk;25.2.9519653
+            cmake;3.22.1
+            
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Restore keystore
+        run: |
+          mkdir -p keystores
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > keystores/release.keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease 
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS_RELEASE: ${{ secrets.KEY_ALIAS_RELEASE }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/release/*.apk
