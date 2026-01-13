@@ -51,7 +51,14 @@ jobs:
       - name: Obtener versión desde build.gradle
         id: version
         run: |
-          VERSION=$(grep "^version" build.gradle | cut -d '"' -f2)
+          #VERSION=$(grep "^version" build.gradle | cut -d '"' -f2)
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#release/}"      
+          else
+            # Caso 3: Cualquier otra rama
+            VERSION="0.0.0"
+          fi          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Crear tag
@@ -80,17 +87,13 @@ jobs:
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           BUILD_NUMBER="${{ github.run_number }}"        
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
-            VERSION="${{ github.ref_name }}"
-      
-          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
             # Caso 2: Rama release/1.0.0 → 1.0.0
             VERSION="${{ github.ref_name }}"
             VERSION="${VERSION#release/}"      
           else
             # Caso 3: Cualquier otra rama
-            VERSION="no-tag"
+            VERSION="0.0.0"
           fi
 
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
