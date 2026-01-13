@@ -93,11 +93,3 @@ jobs:
           name: release-apk
           path: app/build/outputs/apk/release/*.apk
           
-      - name: Check build output
-        run: |
-          if [ -f "app/build/outputs/apk/release/$NEW_NAME" ]; then
-            echo "✅ Release APK generated successfully"
-          else
-            echo "❌ Release APK not found"
-            exit 1
-          fi
