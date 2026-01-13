@@ -97,7 +97,7 @@ jobs:
           fi
 
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}-${VERSION}.apk"
+          NEW_NAME="${REPO_NAME}-delivery-${BUILD_NUMBER}-${VERSION}.apk"
       
           mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
           echo "NEW_NAME=$NEW_NAME" >> $GITHUB_ENV
