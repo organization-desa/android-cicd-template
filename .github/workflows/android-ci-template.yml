@@ -117,7 +117,7 @@ jobs:
           APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
           NEW_NAME="${REPO_NAME}-debug-${BUILD_NUMBER}.apk"
       
-          mv "$APK_PATH" "app/build/outputs/apk/debug/$NEW_NAME"
+          #mv "$APK_PATH" "app/build/outputs/apk/debug/$NEW_NAME"
           echo "APK renamed to $NEW_NAME"
 
       - name: Upload APK
