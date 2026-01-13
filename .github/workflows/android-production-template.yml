@@ -65,16 +65,22 @@ jobs:
           fi          
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      #- name: Configure Git
+      #  run: |
+      #    git config user.name "github-actions[bot]"
+      #    git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Crear tag
-        run: |
-          git tag v${{ steps.version.outputs.version }}
-          git push origin v${{ steps.version.outputs.version }}
-    
+      #- name: Crear tag
+       # run: |
+       #   git tag v${{ steps.version.outputs.version }}
+       #   git push origin v${{ steps.version.outputs.version }}
+
+      - name: Push tag
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_TAG: v${{ steps.version.outputs.version }}
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
