@@ -47,7 +47,18 @@ jobs:
             platform-tools
             ndk;25.2.9519653
             cmake;3.22.1
-            
+
+      - name: Obtener versión desde build.gradle
+        id: version
+        run: |
+          VERSION=$(grep "^version" build.gradle | cut -d '"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Crear tag
+        run: |
+          git tag v${{ steps.version.outputs.version }}
+          git push origin v${{ steps.version.outputs.version }}
+    
       - name: Make gradlew executable
         run: chmod +x gradlew
 
@@ -85,7 +96,7 @@ jobs:
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
           NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}-${VERSION}.apk"
       
-          mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
+          #mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
           echo "NEW_NAME=$NEW_NAME" >> $GITHUB_ENV
           echo "APK renamed to $NEW_NAME"
     
