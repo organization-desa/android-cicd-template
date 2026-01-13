@@ -69,11 +69,9 @@ jobs:
         run: |
           REPO_NAME="${{ github.event.repository.name }}"
           BUILD_NUMBER="${{ github.run_number }}"        
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
-            VERSION="${{ github.ref_name }}"
-      
-          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+          VERSION_NAME=$(./gradlew -q printVersionName)
+          
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
             # Caso 2: Rama release/1.0.0 → 1.0.0
             VERSION="${{ github.ref_name }}"
             VERSION="${VERSION#release/}"      
