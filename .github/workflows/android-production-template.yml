@@ -1,0 +1,105 @@
+name: Android Production Template
+
+on:
+  workflow_call:
+    inputs:
+      java_version:
+        type: string
+        required: false
+        default: "17"
+      java_distribution:
+        type: string
+        required: false
+        default: "temurin"
+    secrets:
+      RELEASE_KEYSTORE_BASE64:
+        required: true
+      KEYSTORE_PASSWORD:
+        required: true
+      KEY_ALIAS_RELEASE:
+        required: true
+      KEY_PASSWORD:
+        required: true
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java_version }}
+          distribution: ${{ inputs.java_distribution }}
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          packages: >
+            platforms;android-34
+            build-tools;34.0.0
+            platform-tools
+            ndk;25.2.9519653
+            cmake;3.22.1
+            
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Restore keystore
+        run: |
+          mkdir -p keystores
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > keystores/release.keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease 
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS_RELEASE: ${{ secrets.KEY_ALIAS_RELEASE }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Resolve version name
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          BUILD_NUMBER="${{ github.run_number }}"        
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Caso 1: Tag (v1.0.0, 1.0.0, etc.)
+            VERSION="${{ github.ref_name }}"
+      
+          elif [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            # Caso 2: Rama release/1.0.0 → 1.0.0
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#release/}"      
+          else
+            # Caso 3: Cualquier otra rama
+            VERSION="no-tag"
+          fi
+
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          NEW_NAME="${REPO_NAME}-release-${BUILD_NUMBER}-${VERSION}.apk"
+      
+          mv "$APK_PATH" "app/build/outputs/apk/release/$NEW_NAME"
+          echo "NEW_NAME=$NEW_NAME" >> $GITHUB_ENV
+          echo "APK renamed to $NEW_NAME"
+    
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: app/build/outputs/apk/release/*.apk
+          
+      - name: Check build output
+        run: |
+          if [ -f "app/build/outputs/apk/release/$NEW_NAME" ]; then
+            echo "✅ Release APK generated successfully"
+          else
+            echo "❌ Release APK not found"
+            exit 1
+          fi
